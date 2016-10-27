@@ -1,5 +1,7 @@
 package com.xiaohao.reference;
 
+import com.xiaohao.Person;
+
 public class ConstructorReference {
 
   public static void main(String[] args) {

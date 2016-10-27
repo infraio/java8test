@@ -1,4 +1,4 @@
-package com.xiaohao.reference;
+package com.xiaohao;
 
 public class Person {
   private String name;
@@ -15,5 +15,10 @@ public class Person {
 
   public int getAge() {
     return this.age;
+  }
+  
+  @Override
+  public String toString() {
+    return name;
   }
 }

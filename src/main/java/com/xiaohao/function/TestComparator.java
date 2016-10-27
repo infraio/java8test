@@ -2,7 +2,7 @@ package com.xiaohao.function;
 
 import java.util.Comparator;
 
-import com.xiaohao.reference.Person;
+import com.xiaohao.Person;
 
 public class TestComparator {
 
