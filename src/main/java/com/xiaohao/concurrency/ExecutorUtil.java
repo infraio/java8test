@@ -20,4 +20,12 @@ public class ExecutorUtil {
       System.out.println("shutdown finished");
     }
   }
+  
+  public static void sleep(int seconds) {
+    try {
+      TimeUnit.SECONDS.sleep(seconds);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
 }

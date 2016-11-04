@@ -53,23 +53,3 @@ public class TestSynchronized {
     assertTrue(counter.getCount() <= COUNT);
   }
 }
-
-class Counter {
-  private int count;
-
-  public Counter() {
-    this.count = 0;
-  }
-
-  public void increment() {
-    count = count + 1;
-  }
-
-  public synchronized void incrementSync() {
-    count = count + 1;
-  }
-
-  public int getCount() {
-    return this.count;
-  }
-}
