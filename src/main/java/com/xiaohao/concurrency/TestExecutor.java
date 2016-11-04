@@ -20,7 +20,7 @@ public class TestExecutor {
       String name = Thread.currentThread().getName();
       System.out.println("Thread is " + name);
     });
-    shutdownGracefully(singleThreadExecutor);
+    ExecutorUtil.shutdownGracefully(singleThreadExecutor, 10);
 
     Callable<Integer> callable = () -> {
       TimeUnit.SECONDS.sleep(1);
@@ -44,7 +44,7 @@ public class TestExecutor {
     } catch (TimeoutException e) {
       System.out.println("Future timeout " + e);
     }
-    shutdownGracefully(fixedExecutor);
+    ExecutorUtil.shutdownGracefully(fixedExecutor, 10);
 
     // invokeAll
     ExecutorService workStealingexecutor = Executors.newWorkStealingPool();
@@ -102,7 +102,7 @@ public class TestExecutor {
     } , initialDelay, delay, TimeUnit.SECONDS);
 
     TimeUnit.SECONDS.sleep(10);
-    shutdownGracefully(scheduledExecutor);
+    ExecutorUtil.shutdownGracefully(scheduledExecutor, 10);
   }
 
   private static Callable<String> newCallable(String result, int sleepSeconds) {
@@ -110,21 +110,5 @@ public class TestExecutor {
       TimeUnit.SECONDS.sleep(sleepSeconds);
       return result;
     };
-  }
-
-  private static void shutdownGracefully(ExecutorService executor) {
-    try {
-      System.out.println("attempt to shutdown executor");
-      executor.shutdown();
-      executor.awaitTermination(5, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      System.err.println("tasks interrupted");
-    } finally {
-      if (!executor.isTerminated()) {
-        System.err.println("cancel non-finished tasks");
-      }
-      executor.shutdownNow();
-      System.out.println("shutdown finished");
-    }
   }
 }
