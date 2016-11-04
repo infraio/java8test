@@ -37,21 +37,25 @@ public class Counter {
   }
 
   public void incrementByConvertToWriteLock(StampedLock lock) {
-    long stamp = lock.readLock();
+    long readStamp = lock.readLock();
+    long writeStamp = 0;
     try {
-      System.out.println("read lock stamp is " + stamp + " by thread " + Thread.currentThread().getName());
-      stamp = lock.tryConvertToWriteLock(stamp);
-      if (stamp == 0) {
+      System.out.println(
+        "read lock stamp is " + readStamp + " by thread " + Thread.currentThread().getName());
+      writeStamp = lock.tryConvertToWriteLock(readStamp);
+      if (writeStamp == 0) {
         System.out.println("Could not convert to write lock");
-        stamp = lock.writeLock();
+        lock.unlockRead(readStamp);
+        writeStamp = lock.writeLock();
       }
       increment();
     } finally {
-      System.out.println("write lock stamp is " + stamp + " by thread " + Thread.currentThread().getName());
-      lock.unlockWrite(stamp);
+      System.out.println(
+        "write lock stamp is " + writeStamp + " by thread " + Thread.currentThread().getName());
+      lock.unlockWrite(writeStamp);
     }
   }
-  
+
   public int getCount() {
     return this.count;
   }
