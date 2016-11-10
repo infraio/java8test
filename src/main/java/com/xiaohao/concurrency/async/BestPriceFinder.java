@@ -53,17 +53,32 @@ public class BestPriceFinder {
     return futures.stream().map(future -> future.join()).collect(Collectors.toList());
   }
 
+  public List<String> findPricesWithDiscount1(String product) {
+    return shops.stream().map(shop -> shop.getPriceWithDiscount(product)).map(Quote::parse)
+        .map(Discount::applyDiscount).collect(Collectors.toList());
+  }
+
+  public List<String> findPricesWithDiscount2(String product, Executor executor) {
+    List<CompletableFuture<String>> futures = shops.stream()
+        .map(shop -> CompletableFuture.supplyAsync(() -> shop.getPriceWithDiscount(product), executor))
+        .map(future -> future.thenApply(Quote::parse))
+        .map(future -> future.thenCompose(
+          quote -> CompletableFuture.supplyAsync(() -> Discount.applyDiscount(quote), executor)))
+        .collect(Collectors.toList());
+    return futures.stream().map(future -> future.join()).collect(Collectors.toList());
+  }
+
   public int getShopsNum() {
     return this.shops.size();
   }
-  
+
   public static void addShops(BestPriceFinder finder, int shopsNum) {
     for (int i = 0; i < shopsNum; i++) {
       finder.addShop(new Shop("shop" + i));
     }
   }
 
-  public static void testFinder(int shopsNum) {
+  public static void testFindPrice(int shopsNum) {
     BestPriceFinder finder = new BestPriceFinder();
     addShops(finder, shopsNum);
     System.out.println("\nShops number is " + finder.getShopsNum() + "\n");
@@ -82,7 +97,7 @@ public class BestPriceFinder {
     System.out.println(finder.findPrices3("iPhone"));
     duration = (System.nanoTime() - start) / 1_000_000;
     System.out.println("Done in " + duration + " msecs");
-    
+
     ExecutorService executor = Executors.newFixedThreadPool(Math.min(finder.getShopsNum(), 100));
     start = System.nanoTime();
     System.out.println(finder.findPrices4("iPhone", executor));
@@ -91,12 +106,33 @@ public class BestPriceFinder {
     ExecutorUtil.shutdownGracefully(executor, 10);
   }
 
+  public static void testFindPriceWithDiscount(int shopsNum) {
+    BestPriceFinder finder = new BestPriceFinder();
+    addShops(finder, shopsNum);
+    System.out.println("\nShops number is " + finder.getShopsNum() + "\n");
+
+    long start = System.nanoTime();
+    System.out.println(finder.findPricesWithDiscount1("iPhone"));
+    long duration = (System.nanoTime() - start) / 1_000_000;
+    System.out.println("Done in " + duration + " msecs");
+
+    ExecutorService executor = Executors.newFixedThreadPool(Math.min(finder.getShopsNum(), 100));
+    start = System.nanoTime();
+    System.out.println(finder.findPricesWithDiscount2("iPhone", executor));
+    duration = (System.nanoTime() - start) / 1_000_000;
+    System.out.println("Done in " + duration + " msecs");
+    ExecutorUtil.shutdownGracefully(executor, 10);
+  }
+
   public static void main(String[] args) {
     int availableProcessors = Runtime.getRuntime().availableProcessors();
-    testFinder(availableProcessors);
-    testFinder(availableProcessors + 1);
-    testFinder(2 * availableProcessors + 1);
-    testFinder(10 * availableProcessors);
+    /*testFindPrice(availableProcessors);
+    testFindPrice(availableProcessors + 1);
+    testFindPrice(2 * availableProcessors + 1);
+    testFindPrice(10 * availableProcessors);*/
+    testFindPriceWithDiscount(availableProcessors);
+    testFindPriceWithDiscount(availableProcessors + 1);
+    testFindPriceWithDiscount(2 * availableProcessors + 1);
   }
 
 }
