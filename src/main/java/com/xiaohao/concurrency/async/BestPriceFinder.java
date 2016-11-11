@@ -60,12 +60,28 @@ public class BestPriceFinder {
 
   public List<String> findPricesWithDiscount2(String product, Executor executor) {
     List<CompletableFuture<String>> futures = shops.stream()
-        .map(shop -> CompletableFuture.supplyAsync(() -> shop.getPriceWithDiscount(product), executor))
+        .map(
+          shop -> CompletableFuture.supplyAsync(() -> shop.getPriceWithDiscount(product), executor))
         .map(future -> future.thenApply(Quote::parse))
         .map(future -> future.thenCompose(
           quote -> CompletableFuture.supplyAsync(() -> Discount.applyDiscount(quote), executor)))
         .collect(Collectors.toList());
     return futures.stream().map(future -> future.join()).collect(Collectors.toList());
+  }
+
+  public List<Double> findPricesInCNY(String product, Executor executor) {
+    List<CompletableFuture<Double>> futuresPriceInCNY = shops.stream()
+        .map(shop -> CompletableFuture.supplyAsync(() -> shop.getPrice(product), executor))
+        .map(future -> future.thenCombine(
+          CompletableFuture.supplyAsync(
+            () -> ExchangeService.getRate(ExchangeService.Money.CNY, ExchangeService.Money.USD)),
+          (price, rate) -> {
+            double result = price * rate;
+            return result;
+          }))
+        .collect(Collectors.toList());
+
+    return futuresPriceInCNY.stream().map(future -> future.join()).collect(Collectors.toList());
   }
 
   public int getShopsNum() {
@@ -126,10 +142,10 @@ public class BestPriceFinder {
 
   public static void main(String[] args) {
     int availableProcessors = Runtime.getRuntime().availableProcessors();
-    /*testFindPrice(availableProcessors);
-    testFindPrice(availableProcessors + 1);
-    testFindPrice(2 * availableProcessors + 1);
-    testFindPrice(10 * availableProcessors);*/
+    /*
+     * testFindPrice(availableProcessors); testFindPrice(availableProcessors + 1); testFindPrice(2 *
+     * availableProcessors + 1); testFindPrice(10 * availableProcessors);
+     */
     testFindPriceWithDiscount(availableProcessors);
     testFindPriceWithDiscount(availableProcessors + 1);
     testFindPriceWithDiscount(2 * availableProcessors + 1);
