@@ -3,7 +3,6 @@ package com.xiaohao.concurrency.async;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 public class Shop {
 
@@ -12,7 +11,7 @@ public class Shop {
 
   public Shop(String name) {
     this.name = name;
-    random = new Random(System.currentTimeMillis());
+    random = new Random();
   }
 
   public double getPrice(String product) {
@@ -42,17 +41,20 @@ public class Shop {
     return String.format("%s:%.2f:%s", name, price, code);
   }
 
+  public String getPriceWithRandomDelay(String product) {
+    double price = calculatePriceWithRandomDelay(product);
+    Discount.Code code = Discount.Code.values()[random.nextInt(Discount.Code.values().length)];
+    return String.format("%s:%.2f:%s", name, price, code);
+  }
+  
   private double calculatePrice(String product) {
-    delay();
+    AsyncUtil.delay();
     return random.nextDouble() * product.charAt(0) + product.charAt(1);
   }
-
-  private void delay() {
-    try {
-      TimeUnit.SECONDS.sleep(1);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
+  
+  private double calculatePriceWithRandomDelay(String product) {
+    AsyncUtil.randomDelay();
+    return random.nextDouble() * product.charAt(0) + product.charAt(1);
   }
   
   public String getName() {
