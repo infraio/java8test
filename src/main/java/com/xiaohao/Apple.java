@@ -2,13 +2,21 @@ package com.xiaohao;
 
 public class Apple implements Comparable<Apple> {
 
-  enum Color {
+  public enum Color {
     GREEN, RED, YELLOW;
   }
 
   private int weight;
   private Color color;
 
+  public Apple() {
+    
+  }
+  
+  public Apple(int weight) {
+    this.weight = weight;
+  }
+  
   public Apple(int weight, Color color) {
     this.weight = weight;
     this.color = color;
