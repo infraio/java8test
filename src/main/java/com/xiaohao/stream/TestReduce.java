@@ -2,6 +2,7 @@ package com.xiaohao.stream;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import com.xiaohao.Person;
 
@@ -29,7 +30,7 @@ public class TestReduce {
       return sum1 + sum2;
     });
     System.out.println(ageSum);
-    
+
     System.out.println("parallel stream");
     ageSum = persons.parallelStream().reduce(0, (sum, p) -> {
       System.out.format("accumulator: sum=%s; person=%s\n", sum, p);
@@ -39,6 +40,18 @@ public class TestReduce {
       return sum1 + sum2;
     });
     System.out.println(ageSum);
+
+    List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9);
+    Optional<Integer> sum = numbers.stream().reduce(Integer::sum);
+    sum.ifPresent(i -> System.out.println("Sum is " + i));
+    Optional<Integer> max = numbers.stream().reduce(Integer::max);
+    max.ifPresent(i -> System.out.println("Max is " + i));
+    max = numbers.stream().max(Integer::max);
+    max.ifPresent(i -> System.out.println("Max is " + i));
+    Optional<Integer> min = numbers.stream().reduce(Integer::min);
+    min.ifPresent(i -> System.out.println("Min is " + i));
+    min = numbers.stream().min(Integer::min);
+    min.ifPresent(i -> System.out.println("Min is " + i));
   }
 
 }
