@@ -1,11 +1,14 @@
 package com.xiaohao.stream;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -13,6 +16,7 @@ import com.xiaohao.stream.Dish.Type;
 
 public class TestCollectors {
 
+  public static int SIZE = 10_000_000;
   public static void main(String[] args) {
     List<Dish> menu = Arrays.asList(new Dish("pork", false, 800, Dish.Type.MEAT),
       new Dish("beef", false, 700, Dish.Type.MEAT), new Dish("chicken", false, 400, Dish.Type.MEAT),
@@ -91,14 +95,48 @@ public class TestCollectors {
         .collect(Collectors.partitioningBy(Dish::isVegetarian, Collectors.collectingAndThen(
           Collectors.maxBy(Comparator.comparingInt(Dish::getCalories)), Optional::get)));
 
-    Map<Boolean, List<Integer>> partitionPrimes = IntStream.range(1, 10).boxed()
+    long startTime = System.currentTimeMillis();
+    Map<Boolean, List<Integer>> partitionPrimes = IntStream.range(2, SIZE).boxed()
         .collect(Collectors.partitioningBy(n -> isPrime(n)));
-    System.out.println(partitionPrimes);
+    System.out.println("Take " + (System.currentTimeMillis() - startTime) + " ms");
+
+    startTime = System.currentTimeMillis();
+    partitionPrimes = partitionPrimesWithCustomCollector(SIZE);
+    System.out.println("Take " + (System.currentTimeMillis() - startTime) + " ms");
+  }
+
+  public static Map<Boolean, List<Integer>> partitionPrimesWithCustomCollector(int n) {
+    return IntStream.range(2, n).boxed().collect(() -> new HashMap<Boolean, List<Integer>>() {
+      {
+        put(true, new ArrayList<Integer>());
+        put(false, new ArrayList<Integer>());
+      }
+    }, (map, candidate) -> {
+      map.get(isPrime(map.get(true), candidate)).add(candidate);
+    } , (map1, map2) -> {
+      map1.get(true).addAll(map2.get(true));
+      map2.get(false).addAll(map2.get(false));
+    });
   }
 
   public static boolean isPrime(int candidate) {
     int candidateRoot = (int) Math.sqrt((double) candidate);
     return IntStream.rangeClosed(2, candidateRoot).noneMatch(i -> candidate % i == 0);
+  }
+
+  public static boolean isPrime(List<Integer> primes, int candidate) {
+    int candidateRoot = (int) Math.sqrt((double) candidate);
+    return takeWhile(primes, prime -> prime < candidateRoot).stream()
+        .noneMatch(prime -> candidate % prime == 0);
+  }
+
+  public static <A> List<A> takeWhile(List<A> list, Predicate<A> p) {
+    for (int i = 0; i < list.size(); i++) {
+      if (!p.test(list.get(i))) {
+        return list.subList(0, i);
+      }
+    }
+    return list;
   }
 
   public enum CaloricLevel {
