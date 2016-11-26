@@ -2,6 +2,8 @@ package com.xiaohao.stream;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -19,6 +21,7 @@ public class MeasuringStreamPerformance {
     measurePerf(n -> parallelRangeSum(n), SIZE);
     measurePerf(n -> sideEffectSum(n), SIZE);
     measurePerf(n -> sideEffectParallelSum(n), SIZE);
+    measurePerf(n -> forkJoinSum(n), SIZE);
   }
 
   public static void measurePerf(Function<Long, Long> f, long n) {
@@ -69,6 +72,11 @@ public class MeasuringStreamPerformance {
     return accumulator.total;
   }
 
+  public static long forkJoinSum(long n) {
+    long[] numbers = LongStream.range(1, n).toArray();
+    ForkJoinTask<Long> task = new ForkJoinSumCalculator(numbers);
+    return new ForkJoinPool().invoke(task);
+  }
 }
 
 class Accumulator {
